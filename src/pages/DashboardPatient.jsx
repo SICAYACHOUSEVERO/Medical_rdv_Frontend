@@ -110,7 +110,14 @@ function DashboardPatient() {
     logout();
     navigate('/login');
   };
-
+  const formatDateFr = (dateStr) => {
+  const date = new Date(dateStr);
+  return date.toLocaleDateString('fr-FR', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+    });
+  };
   if (!user) return null;
 
   return (
@@ -152,7 +159,7 @@ function DashboardPatient() {
               <option value="">-- Choisir un créneau --</option>
               {disponibilites.map((d) => (
                 <option key={d.id} value={d.id}>
-                  {d.date} à {d.heureDebut}h
+                 {formatDateFr(d.date)} à {d.heureDebut}h
                 </option>
               ))}
             </select>
@@ -199,7 +206,7 @@ function DashboardPatient() {
             }}
           >
             <div>
-              <strong>{rdv.date}</strong> à {rdv.heure}h — {rdv.motif || 'Sans motif précisé'}
+              <strong>{formatDateFr(rdv.date)}</strong> à {rdv.heure}h — {rdv.motif || 'Sans motif précisé'}
               <br />
               <span style={{ color: rdv.statut ? '#27ae60' : '#e67e22' }}>
                 {rdv.statut ? 'Confirmé' : 'En attente'}
