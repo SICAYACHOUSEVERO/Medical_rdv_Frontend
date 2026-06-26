@@ -82,13 +82,26 @@ function DashboardMedecin() {
       setError(err.response?.data?.message || "Erreur lors de l'ajout.");
     }
   };
+
   const formatDateFr = (dateStr) => {
-  const date = new Date(dateStr);
-  return date.toLocaleDateString('fr-FR', {
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
+    const date = new Date(dateStr);
+    return date.toLocaleDateString('fr-FR', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
     });
+  };
+
+  const getStatutLabel = (statut) => {
+    if (statut === 'CONFIRME') return 'Confirmé';
+    if (statut === 'REFUSE') return 'Refusé';
+    return 'En attente';
+  };
+
+  const getStatutColor = (statut) => {
+    if (statut === 'CONFIRME') return '#27ae60';
+    if (statut === 'REFUSE') return '#e74c3c';
+    return '#e67e22';
   };
 
   const handleLogout = () => {
@@ -123,22 +136,22 @@ function DashboardMedecin() {
           <input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
         </div>
 
-     <div className="form-group">
-        <label>Heure de début</label>
-        <input
-           type="number"
-           min="0"
-           max="23"
-           list="heures-list"
-           value={heureDebut}
-           onChange={(e) => setHeureDebut(e.target.value)}
-           placeholder="Ex: 9"
+        <div className="form-group">
+          <label>Heure de début</label>
+          <input
+            type="number"
+            min="0"
+            max="23"
+            list="heures-list"
+            value={heureDebut}
+            onChange={(e) => setHeureDebut(e.target.value)}
+            placeholder="Ex: 9"
           />
-     </div>
+        </div>
 
-     <div className="form-group">
-        <label>Heure de fin</label>
-        <input
+        <div className="form-group">
+          <label>Heure de fin</label>
+          <input
             type="number"
             min="0"
             max="23"
@@ -146,8 +159,8 @@ function DashboardMedecin() {
             value={heureFin}
             onChange={(e) => setHeureFin(e.target.value)}
             placeholder="Ex: 17"
-        />
-      </div>
+          />
+        </div>
 
         <button type="submit" className="btn-submit">
           Ajouter la disponibilité
@@ -155,9 +168,9 @@ function DashboardMedecin() {
       </form>
 
       <datalist id="heures-list">
-          {[...Array(24).keys()].map((h) => (
+        {[...Array(24).keys()].map((h) => (
           <option key={h} value={h} />
-          ))}
+        ))}
       </datalist>
 
       <hr style={{ margin: '25px 0', border: 'none', borderTop: '1px solid #eee' }} />
@@ -182,12 +195,12 @@ function DashboardMedecin() {
               <br />
               Patient : {rdv.patient?.nom || 'Inconnu'}
               <br />
-              <span style={{ color: rdv.statut ? '#27ae60' : '#e67e22' }}>
-                {rdv.statut ? 'Confirmé' : 'En attente'}
+              <span style={{ color: getStatutColor(rdv.statut) }}>
+                {getStatutLabel(rdv.statut)}
               </span>
             </div>
 
-            {!rdv.statut && (
+            {rdv.statut === 'EN_ATTENTE' && (
               <div style={{ marginTop: '10px', display: 'flex', gap: '10px' }}>
                 <button className="btn-submit" onClick={() => handleConfirmer(rdv.id)}>
                   Accepter

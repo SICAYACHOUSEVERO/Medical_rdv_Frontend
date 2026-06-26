@@ -35,7 +35,7 @@ function DashboardPatient() {
   const loadRendezVous = async (patientId) => {
     try {
       const data = await getRendezVousByPatient(patientId);
-      setRendezVousList(data);
+      setRendezVousList(data || []);
     } catch (err) {
       console.error(err);
     }
@@ -44,7 +44,7 @@ function DashboardPatient() {
   const loadMedecins = async () => {
     try {
       const data = await getAllMedecins();
-      setMedecins(data);
+      setMedecins(data || []);
     } catch (err) {
       console.error(err);
     }
@@ -57,7 +57,7 @@ function DashboardPatient() {
     if (medecinId) {
       try {
         const data = await getDisponibilitesByMedecin(medecinId);
-        setDisponibilites(data);
+        setDisponibilites(data || []);
       } catch (err) {
         console.error(err);
       }
@@ -72,7 +72,7 @@ function DashboardPatient() {
     setMessage('');
 
     if (!selectedMedecin || !selectedDispo) {
-      setError('Veuillez sélectionner un médecin et un créneau.');
+      setError('Veuillez selectionner un medecin et un creneau.');
       return;
     }
 
@@ -86,7 +86,7 @@ function DashboardPatient() {
         medecin: { id: parseInt(selectedMedecin) },
         disponibilite: { id: dispo.id },
       });
-      setMessage('Rendez-vous demandé avec succès !');
+      setMessage('Rendez-vous demande avec succes !');
       setMotif('');
       setSelectedMedecin('');
       setSelectedDispo('');
@@ -99,38 +99,62 @@ function DashboardPatient() {
   const handleAnnuler = async (rendezVousId) => {
     try {
       await annulerRendezVous(rendezVousId);
-      setMessage('Rendez-vous annulé.');
+      setMessage('Rendez-vous annule.');
       loadRendezVous(user.id);
     } catch (err) {
-      setError('Erreur lors de l\'annulation.');
+      setError("Erreur lors de l'annulation.");
     }
+  };
+
+  const formatDateFr = (dateStr) => {
+    const dateObj = new Date(dateStr);
+    return dateObj.toLocaleDateString('fr-FR', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+    });
+  };
+
+  const getStatutLabel = (statut) => {
+    if (statut === 'CONFIRME') {
+      return 'Confirme';
+    }
+    if (statut === 'REFUSE') {
+      return 'Refuse';
+    }
+    return 'En attente';
+  };
+
+  const getStatutColor = (statut) => {
+    if (statut === 'CONFIRME') {
+      return '#27ae60';
+    }
+    if (statut === 'REFUSE') {
+      return '#e74c3c';
+    }
+    return '#e67e22';
   };
 
   const handleLogout = () => {
     logout();
     navigate('/login');
   };
-  const formatDateFr = (dateStr) => {
-  const date = new Date(dateStr);
-  return date.toLocaleDateString('fr-FR', {
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-    });
-  };
-  if (!user) return null;
+
+  if (!user) {
+    return null;
+  }
 
   return (
     <div className="dashboard-page">
       <div className="dashboard-header">
         <h2>Bienvenue, {user.nom}</h2>
         <button className="btn-logout" onClick={handleLogout}>
-          Déconnexion
+          Deconnexion
         </button>
       </div>
 
       <p>Email : {user.email}</p>
-      <p>Rôle : Patient</p>
+      <p>Role : Patient</p>
 
       <hr style={{ margin: '20px 0', border: 'none', borderTop: '1px solid #eee' }} />
 
@@ -141,10 +165,10 @@ function DashboardPatient() {
 
       <form onSubmit={handlePrendreRendezVous}>
         <div className="form-group">
-          <label>Médecin</label>
+          <label>Medecin</label>
           <select value={selectedMedecin} onChange={handleMedecinChange}>
-            <option value="">-- Choisir un médecin --</option>
-           {(medecins || []).map((m) => (
+            <option value="">Choisir un medecin</option>
+            {medecins.map((m) => (
               <option key={m.id} value={m.id}>
                 Dr. {m.nom} ({m.specialite})
               </option>
@@ -154,12 +178,12 @@ function DashboardPatient() {
 
         {disponibilites.length > 0 && (
           <div className="form-group">
-            <label>Créneau disponible</label>
+            <label>Creneau disponible</label>
             <select value={selectedDispo} onChange={(e) => setSelectedDispo(e.target.value)}>
-              <option value="">-- Choisir un créneau --</option>
+              <option value="">Choisir un creneau</option>
               {disponibilites.map((d) => (
                 <option key={d.id} value={d.id}>
-                 {formatDateFr(d.date)} à {d.heureDebut}h
+                  {formatDateFr(d.date)} a {d.heureDebut}h
                 </option>
               ))}
             </select>
@@ -167,7 +191,7 @@ function DashboardPatient() {
         )}
 
         {selectedMedecin && disponibilites.length === 0 && (
-          <p style={{ color: '#888' }}>Aucune disponibilité pour ce médecin.</p>
+          <p style={{ color: '#888' }}>Aucune disponibilite pour ce medecin.</p>
         )}
 
         <div className="form-group">
@@ -189,10 +213,10 @@ function DashboardPatient() {
 
       <h3>Mes rendez-vous</h3>
 
-      {(rendezVousList || []).length === 0 ? (
-          <p style={{ color: '#888' }}>Vous n'avez aucun rendez-vous pour le moment.</p>
+      {rendezVousList.length === 0 ? (
+        <p style={{ color: '#888' }}>Vous n avez aucun rendez-vous pour le moment.</p>
       ) : (
-          (rendezVousList || []).map((rdv) => (
+        rendezVousList.map((rdv) => (
           <div
             key={rdv.id}
             style={{
@@ -206,15 +230,17 @@ function DashboardPatient() {
             }}
           >
             <div>
-              <strong>{formatDateFr(rdv.date)}</strong> à {rdv.heure}h — {rdv.motif || 'Sans motif précisé'}
+              <strong>{formatDateFr(rdv.date)}</strong> a {rdv.heure}h - {rdv.motif || 'Sans motif precise'}
               <br />
-              <span style={{ color: rdv.statut ? '#27ae60' : '#e67e22' }}>
-                {rdv.statut ? 'Confirmé' : 'En attente'}
+              <span style={{ color: getStatutColor(rdv.statut) }}>
+                {getStatutLabel(rdv.statut)}
               </span>
             </div>
-            <button className="btn-logout" onClick={() => handleAnnuler(rdv.id)}>
-              Annuler
-            </button>
+            {rdv.statut !== 'REFUSE' && (
+              <button className="btn-logout" onClick={() => handleAnnuler(rdv.id)}>
+                Annuler
+              </button>
+            )}
           </div>
         ))
       )}
